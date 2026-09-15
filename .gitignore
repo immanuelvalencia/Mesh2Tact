@@ -1,0 +1,44 @@
+# Python and build caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+
+# Local outputs, datasets, and model weights
+out/
+output/
+artifacts/
+data/
+train/
+tmp/
+*.npz
+*.mp4
+*.pth
+*.pt
+*.log
+benchmarks/Camera Roll/
+benchmarks/camera_roll_calibration/
+configs/calibration_sessions/
+
+# Local preferences and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+configs/preview_preferences.json
+configs/gather_output_preferences.json
+
+# Reference library, duplicate workspace, and rendered publication outputs
+claude_code_only/
+publications/
+publication/references/
+publication/review/
+publication/_methodology_docx/
+publication/figures/
+publication/manuscript/*.docx
+publication/manuscript/*.pdf
+publication/manuscript/methodology_render*/

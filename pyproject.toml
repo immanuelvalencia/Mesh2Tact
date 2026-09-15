@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mesh2tact"
+version = "0.2.0"
+description = "Geometric STL slicing and GelSight-style image rendering"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Jim" }]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "trimesh>=4.0",
+    "opencv-python>=4.9",
+    "pyyaml>=6.0",
+    "pyvista>=0.44",
+    "pyvistaqt",
+    "PyQt5",
+    "qtpy",
+]
+
+[project.optional-dependencies]
+gui = ["pyvista>=0.44", "pyvistaqt", "PyQt5", "qtpy"]
+dev = ["pytest", "matplotlib", "scikit-image"]
+
+[project.scripts]
+mesh2tact = "mesh2tact.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["mesh2tact*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: end-to-end physics tests"]

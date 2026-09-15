@@ -1,0 +1,149 @@
+{
+  "format": "vtsim-sensor-config",
+  "version": 1,
+  "sensor": {
+    "name": "gelsight_mini_like",
+    "gel": {
+      "size_x": 0.018600000000000002,
+      "size_y": 0.0143,
+      "thickness": 0.003,
+      "youngs_modulus": 300000.0,
+      "poissons_ratio": 0.45,
+      "density": 1100.0,
+      "particles_per_cell_axis": 2.0,
+      "damping": 8.0
+    },
+    "solver": {
+      "grid_res": 96,
+      "headroom": 0.006,
+      "margin": 0.002,
+      "dt": 1e-05,
+      "substeps": 120,
+      "gravity": 0.0,
+      "friction": 0.9,
+      "arch": "cuda",
+      "device_memory_gb": 2.0
+    },
+    "camera": {
+      "width": 328,
+      "height": 246,
+      "max_depth": 0.0015
+    },
+    "optics": {
+      "leds": [
+        {
+          "color": [
+            1.0,
+            0.25,
+            0.25
+          ],
+          "azimuth": 90.0,
+          "elevation": 25.0,
+          "intensity": 1.0
+        },
+        {
+          "color": [
+            0.25,
+            1.0,
+            0.25
+          ],
+          "azimuth": 210.0,
+          "elevation": 25.0,
+          "intensity": 1.0
+        },
+        {
+          "color": [
+            0.35,
+            0.45,
+            1.0
+          ],
+          "azimuth": 330.0,
+          "elevation": 25.0,
+          "intensity": 1.0
+        }
+      ],
+      "ambient": [
+        0.1,
+        0.1,
+        0.12
+      ],
+      "diffuse_gain": 0.85,
+      "specular_gain": 0.25,
+      "shininess": 24.0,
+      "calibration_path": null,
+      "noise_sigma": 0.006,
+      "exposure": 1.0,
+      "reference_background": true
+    },
+    "markers": {
+      "enabled": true,
+      "spacing": 0.0012,
+      "radius_px": 3.0,
+      "darkness": 0.75
+    }
+  },
+  "gel_lighting": {
+    "enabled": true,
+    "background": [
+      0.19,
+      0.28,
+      0.29
+    ],
+    "vignette": 0.35,
+    "brightness": 1.0,
+    "contrast": 1.0,
+    "saturation": 1.0,
+    "hue": 0.0,
+    "gamma": 1.0,
+    "glows": [
+      {
+        "color": [
+          0.35,
+          0.51,
+          0.65
+        ],
+        "strength": 0.45,
+        "x": 0.5,
+        "y": 0.35,
+        "width": 0.29,
+        "height": 0.28,
+        "angle": 0.0
+      },
+      {
+        "color": [
+          0.68,
+          0.4,
+          0.52
+        ],
+        "strength": 0.4,
+        "x": 0.51,
+        "y": 0.54,
+        "width": 0.19,
+        "height": 0.17,
+        "angle": 0.0
+      }
+    ]
+  },
+  "effects": {
+    "enabled": true,
+    "seed": 0,
+    "read_noise": 0.0,
+    "shot_noise": 0.0,
+    "speckle": 0.0,
+    "texture": 0.0,
+    "texture_scale_mm": 0.15,
+    "blur_px": 1.5000000000000002,
+    "vignette": 0.0,
+    "contrast": 1.0,
+    "gamma": 1.0
+  },
+  "controls": {
+    "softness": 0.0,
+    "width": 18.6,
+    "height": 14.3,
+    "depth_range": 1.5,
+    "output_w": 984,
+    "output_h": 739,
+    "preview_scale": 33.333
+  }
+}

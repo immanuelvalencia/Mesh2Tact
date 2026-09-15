@@ -1,0 +1,366 @@
+{
+  "python": "3.11.16",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "source_hashes": {
+    "vtsim/calibration.py": "ab03270e2b5a293cb7ba7cf08b2d72cfd5cabba1700fbaf565fe07afc3935270",
+    "vtsim/calibration_noise.py": "baa4b4902d8efe0985b1146c30aeba3183c5be1c6d37861d6ca6a94a89206a77",
+    "vtsim/render/effects.py": "6f2db7a3027cc650ce67086e4d6a301c88f1b2316d7584d561e485ef40b2b60e"
+  },
+  "lighting": {
+    "seconds": 3.1595750999986194,
+    "profile": "         1302462 function calls (1153878 primitive calls) in 3.155 seconds\n\n   Ordered by: cumulative time\n   List reduced from 451 to 22 due to restriction <22>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        1    0.020    0.020    3.159    3.159 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration.py:142(fit_references)\n      211    0.004    0.000    2.857    0.014 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration.py:175(images)\n      422    0.014    0.000    2.815    0.007 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration.py:53(render_float)\n      179    0.071    0.000    2.695    0.015 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration.py:208(image_residual)\n        1    0.000    0.000    2.446    2.446 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\_lib\\_util.py:705(inner)\n        1    0.000    0.000    2.446    2.446 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_lsq\\least_squares.py:266(least_squares)\n       16    0.002    0.000    2.382    0.149 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_lsq\\least_squares.py:262(__call__)\n      128    0.000    0.000    2.373    0.019 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration.py:369(scaled_residual)\n      128    0.001    0.000    2.372    0.019 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration.py:359(residual)\n        1    0.000    0.000    2.206    2.206 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_lsq\\trf.py:113(trf)\n        1    0.007    0.007    2.206    2.206 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_lsq\\trf.py:206(trf_bounds)\n      422    0.032    0.000    2.142    0.005 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\render\\optical.py:177(render)\n        8    0.002    0.000    1.980    0.248 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration.py:371(jacobian)\n      844    0.358    0.000    1.965    0.002 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration.py:61(cached_shade)\n        8    0.000    0.000    1.756    0.220 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_differentiable_functions.py:748(jac)\n        8    0.001    0.000    1.752    0.219 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_differentiable_functions.py:711(_update_jac)\n        7    0.000    0.000    1.751    0.250 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_differentiable_functions.py:447(__call__)\n      388    0.001    0.000    1.532    0.004 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\render\\optical.py:68(shade)\n      388    1.450    0.004    1.529    0.004 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\render\\optical.py:96(_shade_edges)\n      422    0.386    0.001    0.429    0.001 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\render\\gel.py:84(overlay)\n        9    0.000    0.000    0.399    0.044 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_differentiable_functions.py:705(_update_fun)\n        8    0.000    0.000    0.399    0.050 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_differentiable_functions.py:422(__call__)\n\n\n",
+    "metrics": [
+      {
+        "name": "sphere-0",
+        "validation": false,
+        "before_mae": 0.0034457756115404115,
+        "before_rmse": 0.00799146229687808,
+        "before_contact_mae": 0.018179266990608525,
+        "after_mae": 0.0019190005596596742,
+        "after_rmse": 0.0022277781438073165,
+        "after_contact_mae": 0.0014283635642598656
+      },
+      {
+        "name": "sphere-1",
+        "validation": false,
+        "before_mae": 0.0034198081138475784,
+        "before_rmse": 0.007869098650893617,
+        "before_contact_mae": 0.017887348306689664,
+        "after_mae": 0.001919301341707924,
+        "after_rmse": 0.0022283426601236384,
+        "after_contact_mae": 0.0014246454352145987
+      }
+    ],
+    "stages": [
+      {
+        "stage": "Lighting",
+        "evaluations": 128,
+        "message": "The maximum number of function evaluations is exceeded.",
+        "resolution": [
+          128,
+          96
+        ],
+        "algorithm": "Bounded robust trust-region least squares; scaled absolute-difference Jacobian",
+        "starts": 1,
+        "edge_trials": 24,
+        "initial_cost": 3.3251384295942315e-05,
+        "final_cost": 4.607110779661786e-07,
+        "accepted": true,
+        "seed": 42
+      }
+    ],
+    "settings": {
+      "sensor": {
+        "name": "gelsight_mini_like",
+        "gel": {
+          "size_x": 0.0186,
+          "size_y": 0.0143,
+          "thickness": 0.003,
+          "youngs_modulus": 300000.0,
+          "poissons_ratio": 0.45,
+          "density": 1100.0,
+          "particles_per_cell_axis": 2.0,
+          "damping": 8.0
+        },
+        "solver": {
+          "grid_res": 96,
+          "headroom": 0.006,
+          "margin": 0.002,
+          "dt": 1e-05,
+          "substeps": 120,
+          "gravity": 0.0,
+          "friction": 0.9,
+          "arch": "cuda",
+          "device_memory_gb": 2.0
+        },
+        "camera": {
+          "width": 128,
+          "height": 96,
+          "max_depth": 0.0015
+        },
+        "optics": {
+          "leds": [
+            {
+              "color": [
+                1.0,
+                0.0004917498556423829,
+                0.0004953428350198608
+              ],
+              "azimuth": 270.0,
+              "elevation": 25.305722983221237,
+              "intensity": 0.9890073109560306
+            },
+            {
+              "color": [
+                4.218345020298662e-05,
+                1.0,
+                2.5893434757996815e-06
+              ],
+              "azimuth": 180.0,
+              "elevation": 25.40730805792577,
+              "intensity": 0.9916324678307942
+            },
+            {
+              "color": [
+                8.512516819347981e-06,
+                4.451253048397614e-07,
+                1.0
+              ],
+              "azimuth": 0.0,
+              "elevation": 25.425320659371504,
+              "intensity": 0.9915736613526177
+            }
+          ],
+          "ambient": [
+            0.1,
+            0.1,
+            0.12
+          ],
+          "diffuse_gain": 0.85,
+          "specular_gain": 0.25,
+          "shininess": 24.0,
+          "calibration_path": null,
+          "noise_sigma": 0.0,
+          "exposure": 1.0,
+          "reference_background": true,
+          "side_lighting": true,
+          "side_distance": 1.1491439808115274,
+          "side_falloff": 1.0514630150540247
+        },
+        "markers": {
+          "enabled": true,
+          "spacing": 0.0012,
+          "radius_px": 3.0,
+          "darkness": 0.75
+        }
+      },
+      "gel_lighting": {
+        "enabled": true,
+        "background": [
+          0.19,
+          0.28,
+          0.29
+        ],
+        "vignette": 0.35,
+        "brightness": 1.0,
+        "contrast": 1.0,
+        "saturation": 1.0,
+        "hue": 0.0,
+        "gamma": 1.0,
+        "glows": [
+          {
+            "color": [
+              0.35,
+              0.51,
+              0.65
+            ],
+            "strength": 0.45,
+            "x": 0.5,
+            "y": 0.35,
+            "width": 0.29,
+            "height": 0.28,
+            "angle": 0.0
+          },
+          {
+            "color": [
+              0.68,
+              0.4,
+              0.52
+            ],
+            "strength": 0.4,
+            "x": 0.51,
+            "y": 0.54,
+            "width": 0.19,
+            "height": 0.17,
+            "angle": 0.0
+          }
+        ]
+      },
+      "effects": {
+        "enabled": true,
+        "seed": 0,
+        "read_noise": 0.0,
+        "shot_noise": 0.0,
+        "speckle": 0.0,
+        "texture": 0.0,
+        "texture_scale_mm": 0.15,
+        "blur_px": 0.0,
+        "vignette": 0.0,
+        "contrast": 1.0,
+        "gamma": 1.0
+      },
+      "softness": 0.0
+    }
+  },
+  "noise_texture": {
+    "seconds": 2.367837999998301,
+    "profile": "         1102284 function calls (1099538 primitive calls) in 2.367 seconds\n\n   Ordered by: cumulative time\n   List reduced from 714 to 22 due to restriction <22>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        1    0.000    0.000    2.367    2.367 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration.py:142(fit_references)\n        1    0.000    0.000    2.094    2.094 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration_noise.py:163(fit_texture)\n       51    0.003    0.000    2.078    0.041 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration_noise.py:176(objective)\n        1    0.000    0.000    2.066    2.066 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\_lib\\_util.py:291(wrapper)\n        1    0.000    0.000    2.066    2.066 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_differentialevolution.py:25(differential_evolution)\n        1    0.000    0.000    2.061    2.061 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_differentialevolution.py:1185(solve)\n       50    0.000    0.000    2.058    0.041 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\_lib\\_util.py:587(__call__)\n        4    0.000    0.000    1.688    0.422 {built-in method builtins.next}\n        4    0.001    0.000    1.688    0.422 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_differentialevolution.py:1601(__next__)\n      210    0.312    0.001    1.338    0.006 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\render\\effects.py:57(apply)\n     1543    0.007    0.000    1.113    0.001 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\ndimage\\_filters.py:756(gaussian_filter)\n     3086    0.006    0.000    1.084    0.000 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\ndimage\\_filters.py:687(gaussian_filter1d)\n     3086    0.009    0.000    1.054    0.000 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\ndimage\\_filters.py:555(correlate1d)\n     3086    1.038    0.000    1.038    0.000 {built-in method scipy.ndimage._nd_image.correlate1d}\n      196    0.009    0.000    1.007    0.005 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\render\\effects.py:23(field)\n       98    0.069    0.001    0.997    0.010 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\render\\effects.py:35(_texture_field)\n      206    0.047    0.000    0.743    0.004 C:\\Users\\Jim\\Development\\VTSimulator\\vtsim\\calibration_noise.py:147(spatial_statistics)\n        1    0.000    0.000    0.373    0.373 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\scipy\\optimize\\_differentialevolution.py:1368(_calculate_population_energies)\n     7416    0.009    0.000    0.342    0.000 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\numpy\\lib\\_function_base_impl.py:4255(quantile)\n     8058    0.010    0.000    0.318    0.000 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\numpy\\lib\\_function_base_impl.py:3815(_ureduce)\n     7416    0.006    0.000    0.308    0.000 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\numpy\\lib\\_function_base_impl.py:4500(_quantile_unchecked)\n     7416    0.006    0.000    0.292    0.000 C:\\Users\\Jim\\anaconda3\\envs\\vtsim\\Lib\\site-packages\\numpy\\lib\\_function_base_impl.py:4639(_quantile_ureduce_func)\n\n\n",
+    "stages": [
+      {
+        "stage": "Noise",
+        "algorithm": "Robust bounded variance-component regression with RGB covariance",
+        "repeat_pairs": 1,
+        "single_frames": 0,
+        "patches": 12,
+        "warnings": [],
+        "initial_cost": 12.7205844879959,
+        "final_cost": 0.39321512786591584,
+        "native_pixel_statistics": true
+      },
+      {
+        "stage": "Texture",
+        "algorithm": "Seeded differential evolution of multiscale residual powers",
+        "evaluations": 51,
+        "initial_cost": 2.509331053081466,
+        "final_cost": 0.03841265583225573,
+        "accepted": true,
+        "seed": 42,
+        "warnings": [
+          "Texture is an effective spatial appearance estimate; residual geometry/lighting error can inflate it. Statistics use native photo pixels."
+        ]
+      }
+    ],
+    "settings": {
+      "sensor": {
+        "name": "gelsight_mini_like",
+        "gel": {
+          "size_x": 0.0186,
+          "size_y": 0.0143,
+          "thickness": 0.003,
+          "youngs_modulus": 300000.0,
+          "poissons_ratio": 0.45,
+          "density": 1100.0,
+          "particles_per_cell_axis": 2.0,
+          "damping": 8.0
+        },
+        "solver": {
+          "grid_res": 96,
+          "headroom": 0.006,
+          "margin": 0.002,
+          "dt": 1e-05,
+          "substeps": 120,
+          "gravity": 0.0,
+          "friction": 0.9,
+          "arch": "cuda",
+          "device_memory_gb": 2.0
+        },
+        "camera": {
+          "width": 128,
+          "height": 96,
+          "max_depth": 0.0015
+        },
+        "optics": {
+          "leds": [
+            {
+              "color": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "azimuth": 270.0,
+              "elevation": 25.0,
+              "intensity": 1.0
+            },
+            {
+              "color": [
+                0.0,
+                1.0,
+                0.0
+              ],
+              "azimuth": 180.0,
+              "elevation": 25.0,
+              "intensity": 1.0
+            },
+            {
+              "color": [
+                0.0,
+                0.0,
+                1.0
+              ],
+              "azimuth": 0.0,
+              "elevation": 25.0,
+              "intensity": 1.0
+            }
+          ],
+          "ambient": [
+            0.1,
+            0.1,
+            0.12
+          ],
+          "diffuse_gain": 0.85,
+          "specular_gain": 0.25,
+          "shininess": 24.0,
+          "calibration_path": null,
+          "noise_sigma": 0.0,
+          "exposure": 1.0,
+          "reference_background": true,
+          "side_lighting": true,
+          "side_distance": 1.1,
+          "side_falloff": 1.0
+        },
+        "markers": {
+          "enabled": true,
+          "spacing": 0.0012,
+          "radius_px": 3.0,
+          "darkness": 0.75
+        }
+      },
+      "gel_lighting": {
+        "enabled": true,
+        "background": [
+          0.19,
+          0.28,
+          0.29
+        ],
+        "vignette": 0.35,
+        "brightness": 1.0,
+        "contrast": 1.0,
+        "saturation": 1.0,
+        "hue": 0.0,
+        "gamma": 1.0,
+        "glows": [
+          {
+            "color": [
+              0.35,
+              0.51,
+              0.65
+            ],
+            "strength": 0.45,
+            "x": 0.5,
+            "y": 0.35,
+            "width": 0.29,
+            "height": 0.28,
+            "angle": 0.0
+          },
+          {
+            "color": [
+              0.68,
+              0.4,
+              0.52
+            ],
+            "strength": 0.4,
+            "x": 0.51,
+            "y": 0.54,
+            "width": 0.19,
+            "height": 0.17,
+            "angle": 0.0
+          }
+        ]
+      },
+      "effects": {
+        "enabled": true,
+        "seed": 0,
+        "read_noise": 0.018538108115824625,
+        "shot_noise": 0.013424910507564279,
+        "speckle": 0.046971983009049374,
+        "texture": 0.051441739513133966,
+        "texture_scale_mm": 0.31248184262764805,
+        "blur_px": 0.0,
+        "vignette": 0.0,
+        "contrast": 1.0,
+        "gamma": 1.0
+      },
+      "softness": 0.0
+    }
+  }
+}
