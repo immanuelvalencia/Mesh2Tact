@@ -63,6 +63,14 @@ class LightingPanel(QtWidgets.QGroupBox):
         self.ambient_button.clicked.connect(lambda: self._pick_color(True))
         layout.addWidget(self.ambient_button)
         self.exposure = self._control(layout, "Overall exposure", 0, 5, .01, "")
+        self.depth_relief = self._control(layout, "Depth relief: soft rim / bright centre", 0, 1, .05, "")
+        self.depth_relief.setToolTip("Uses geometric depth and local slope. Try 0.8, with depth darkening and directional shadows off. Appearance adjustment only.")
+        self.depth_shading = self._control(layout, "Depth shading (0 = off)", 0, 2, .05, " /mm")
+        self.depth_shading.setToolTip("Darkens deeper indentation using geometric depth. Try 0.35 /mm. Experimental appearance effect; does not change depth or contact geometry.")
+        self.shadow_strength = self._control(layout, "Directional shadows (0 = off)", 0, 1, .05, "")
+        self.shadow_strength.setToolTip("Try 0.65. Uses geometric depth to find where the gel surface blocks a virtual light. Experimental appearance cue, separate from the coloured LEDs.")
+        self.shadow_azimuth = self._control(layout, "Shadow light direction", -360, 360, 1, "°")
+        self.shadow_elevation = self._control(layout, "Shadow light elevation", 5, 85, 1, "°")
         self.diffuse = self._control(layout, "Diffuse reflection", 0, 3, .01, "")
         self.specular = self._control(layout, "Specular reflection", 0, 3, .01, "")
         self.shininess = self._control(layout, "Highlight sharpness", 1, 256, 1, "")
@@ -154,7 +162,7 @@ class LightingPanel(QtWidgets.QGroupBox):
     def set_optics(self, optics):
         self._loading = True
         self.optics = deepcopy(optics)
-        self.response_notice.setText('Calibrated spatial colour response is active. LED direction and colour controls do not affect this mode; exposure still applies.'
+        self.response_notice.setText('Calibrated spatial colour response is active. LED direction and colour controls do not affect this mode; exposure, depth shading and directional shadows still apply.'
                                      if optics.spatial_response is not None else '')
         self.response_notice.setVisible(optics.spatial_response is not None)
         index = max(self.selector.currentIndex(), 0)
@@ -165,6 +173,10 @@ class LightingPanel(QtWidgets.QGroupBox):
         self.side.setChecked(optics.side_lighting)
         self.side_distance.setValue(optics.side_distance)
         self.side_falloff.setValue(optics.side_falloff)
+        self.depth_shading.setValue(optics.depth_shading)
+        self.depth_relief.setValue(optics.depth_relief)
+        for name in ('shadow_strength', 'shadow_azimuth', 'shadow_elevation'):
+            getattr(self, name).setValue(getattr(optics, name))
         for widget, value in [(self.exposure, optics.exposure), (self.diffuse, optics.diffuse_gain),
                               (self.specular, optics.specular_gain), (self.shininess, optics.shininess),
                               (self.noise, optics.noise_sigma)]:
@@ -237,6 +249,10 @@ class LightingPanel(QtWidgets.QGroupBox):
         self.optics.side_lighting = self.side.isChecked()
         self.optics.side_distance = self.side_distance.value()
         self.optics.side_falloff = self.side_falloff.value()
+        self.optics.depth_shading = self.depth_shading.value()
+        self.optics.depth_relief = self.depth_relief.value()
+        for name in ('shadow_strength', 'shadow_azimuth', 'shadow_elevation'):
+            setattr(self.optics, name, getattr(self, name).value())
         for name, widget in [("exposure", self.exposure), ("diffuse_gain", self.diffuse),
                              ("specular_gain", self.specular), ("shininess", self.shininess),
                              ("noise_sigma", self.noise)]:

@@ -43,7 +43,7 @@ def test_architecture_name_supports_the_training_families(tmp_path):
 
 def test_predict_classifier_loads_standard_checkpoint(tmp_path):
     torch = __import__('pytest').importorskip('torch')
-    models = __import__('pytest').importorskip('torchvision.models', fromlist=['models'])
+    models = __import__('pytest').importorskip('torchvision.models')
     from mesh2tact.prediction import ModelCandidate, predict_classifier
 
     checkpoint = tmp_path / 'resnet18.pth'

@@ -65,7 +65,7 @@ class GatherPanel(QtWidgets.QWidget):
         self.save_output_defaults.clicked.connect(self.save_output_preferences)
         form.addRow(self.save_output_defaults)
         self.load_output_preferences()
-        hint = QtWidgets.QLabel("Run status and a sample manifest are always saved.")
+        hint = QtWidgets.QLabel("Only the checked output types are saved.")
         hint.setWordWrap(True)
         form.addRow(hint)
         self.count = window.integer_control(form, "Number of samples", 1, 100000, 100, schedule=False)
@@ -113,7 +113,7 @@ class GatherPanel(QtWidgets.QWidget):
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
         hint = QtWidgets.QLabel("Unchecked random options keep the current value. Rotations use independent uniform "
-            "XYZ angles. All samples are saved, including empty contacts. Each run gets a new folder and a manifest. "
+            "XYZ angles. All samples are saved, including empty contacts. "
             "Stop finishes the current sample and keeps completed captures. The current preview pose is preserved.")
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -142,13 +142,13 @@ class GatherPanel(QtWidgets.QWidget):
         indexed = self.save_layout.currentData() == "object_label"
         self.object_label.setEnabled(indexed)
         if not indexed:
-            self.destination.setText(str(self.window.data_root / model_name(self.window.sim.source) / "<date-time>"))
+            self.destination.setText(str(self.window.data_root / "tactile" / model_name(self.window.sim.source) / "<date-time>"))
             return
         label = self.object_label.text().strip()
         if not label:
             self.destination.setText("Enter an object label. Existing data will not be replaced.")
             return
-        parent = self.window.data_root / model_name(label)
+        parent = self.window.data_root / "tactile" / model_name(label)
         try:
             import re
             pattern = re.compile(r'^(?:sample|run|manifest|processed_mesh|\.sample)_(\d{6})')

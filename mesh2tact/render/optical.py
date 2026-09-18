@@ -249,6 +249,20 @@ class GelSightRenderer:
         if markers is not None and displacement is not None:
             rgb = markers.draw(rgb, sampler, displacement)
 
+        # Use absolute indentation, never the frame peak or display colour range.
+        # This empirical attenuation supplies a cue even on constant-slope faces.
+        strength = self.optics.depth_shading
+        if not np.isfinite(strength) or not 0 <= strength <= 2:
+            raise ValueError('Depth shading must be finite and between 0 and 2')
+        if strength:
+            rgb *= np.exp(-strength * np.maximum(-height, 0) * 1000)[..., None]
+
+        if self.optics.shadow_strength:
+            rgb *= self.depth_shadow(height)[..., None]
+
+        if self.optics.depth_relief:
+            rgb *= self.relief_gain(height)[..., None]
+
         rgb *= self.optics.exposure
         if self.optics.noise_sigma > 0:
             rgb = rgb + self._rng.normal(0.0, self.optics.noise_sigma, rgb.shape)
@@ -259,6 +273,64 @@ class GelSightRenderer:
         return rgb
 
     # ------------------------------------------------------------------ #
+    def relief_gain(self, height):
+        """Empirical centre lift and perimeter shade from metric depth alone.
+
+        A fixed physical smoothing scale measures local slopes without changing
+        the input geometry. No per-image peak normalization or virtual light.
+        """
+        strength = self.optics.depth_relief
+        if not np.isfinite(strength) or not 0 <= strength <= 1:
+            raise ValueError('Depth relief must be between 0 and 1')
+        depth = np.maximum(-height, 0)
+        h, w = depth.shape
+        dx, dy = self.cfg.gel.size_x/w, self.cfg.gel.size_y/h
+        smooth = ndimage.gaussian_filter(depth, (.00012/dy, .00012/dx), mode='nearest')
+        gy, gx = np.gradient(smooth, dy, dx)
+        slope = np.hypot(gx, gy)
+        # Fade to zero at first contact and retain an unchanged empty pad.
+        contact = -np.expm1(-depth/.00006)
+        centre = -np.expm1(-depth/.0006)
+        rim = slope/(slope+.25)
+        return 1 + strength*contact*(.30*centre-.45*rim)
+
+    def depth_shadow(self, height):
+        """Approximate directional visibility of a single-valued gel surface.
+
+        A separate virtual light supplies an optional achromatic appearance cue,
+        including for fitted RGB responses. This is not LED transport calibration.
+        Outside the sampled pad is unknown and does not cast shadows.
+        """
+        strength = self.optics.shadow_strength
+        azimuth, elevation = self.optics.shadow_azimuth, self.optics.shadow_elevation
+        if (not np.isfinite([strength, azimuth, elevation]).all()
+                or not 0 <= strength <= 1 or not -360 <= azimuth <= 360
+                or not 5 <= elevation <= 85):
+            raise ValueError('Invalid depth shadow controls')
+        h, w = height.shape
+        relief = float(np.ptp(height))
+        if not strength or relief <= 0:
+            return np.ones_like(height)
+        dx, dy = self.cfg.gel.size_x/w, self.cfg.gel.size_y/h
+        angle = np.deg2rad(azimuth)
+        slope = np.tan(np.deg2rad(elevation))
+        # Beyond this distance even the highest surface cannot block the ray.
+        reach = min(relief/slope, np.hypot(self.cfg.gel.size_x, self.cfg.gel.size_y))
+        step = min(dx, dy)
+        if reach < step:
+            return np.ones_like(height)
+        yy, xx = np.mgrid[:h, :w].astype(np.float32)
+        obstruction = np.zeros_like(height)
+        for distance in np.linspace(step, reach, min(128, int(np.ceil(reach/step)))):
+            sampled = ndimage.map_coordinates(height,
+                [yy + distance*np.sin(angle)/dy, xx + distance*np.cos(angle)/dx],
+                order=1, mode='constant', cval=-np.inf, prefilter=False)
+            obstruction = np.maximum(obstruction, sampled-height-distance*slope)
+        # Fixed 0.1 mm transition limits jagged sampled shadow boundaries.
+        shadow = np.clip(obstruction/.0001, 0, 1)
+        shadow = shadow*shadow*(3-2*shadow)
+        return 1-strength*shadow
+
     @staticmethod
     def depth_colormap(depth: np.ndarray, max_depth: float) -> np.ndarray:
         """A quick false-colour view of indentation depth, for debugging."""

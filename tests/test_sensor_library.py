@@ -17,11 +17,9 @@ def test_output_selection_and_flat_model_layout(tmp_path):
     result = gather(sim, tmp_path, GatherSettings(count=2, outputs=outputs))
     from pathlib import Path
     out = Path(result["directory"])
-    assert out.parent == tmp_path / "sphere"
+    assert out.parent == tmp_path / "tactile" / "sphere"
     assert result["status"] == "complete"
-    assert {p.name for p in out.iterdir()} == {"run.json", "manifest.jsonl", "sample_000001_tactile.png", "sample_000002_tactile.png"}
-    rows = [json.loads(line) for line in (out / "manifest.jsonl").read_text().splitlines()]
-    assert rows[0]["files"] == {"tactile.png": "sample_000001_tactile.png"}
+    assert {p.name for p in out.iterdir()} == {"sample_000001_tactile.png", "sample_000002_tactile.png"}
     none = SaveOptions(**{name: False for name in asdict(SaveOptions())})
     with pytest.raises(ValueError):
         gather(sim, tmp_path, GatherSettings(outputs=none))

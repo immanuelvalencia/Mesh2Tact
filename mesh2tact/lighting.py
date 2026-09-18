@@ -33,6 +33,11 @@ def validate_lighting(optics):
     color(optics.ambient, "Ambient color")
     number(optics.side_distance, 1, 3, "Side distance")
     number(optics.side_falloff, 0, 2, "Side falloff")
+    number(optics.depth_shading, 0, 2, "Depth shading")
+    number(optics.depth_relief, 0, 1, "Depth relief")
+    number(optics.shadow_strength, 0, 1, "Shadow strength")
+    number(optics.shadow_azimuth, -360, 360, "Shadow direction")
+    number(optics.shadow_elevation, 5, 85, "Shadow elevation")
     if not isinstance(optics.side_lighting, bool):
         raise ValueError("side_lighting must be true or false")
     for key, lo, hi in [("exposure", 0, 5), ("diffuse_gain", 0, 3),

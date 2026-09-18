@@ -18,12 +18,6 @@ def small_sim():
     return sim
 
 
-def records(result):
-    from pathlib import Path
-    path = Path(result["directory"])
-    return path, [json.loads(line) for line in (path / "manifest.jsonl").read_text().splitlines()]
-
-
 def test_seeded_gather_ranges_and_metadata(tmp_path):
     settings = GatherSettings(count=3, seed=7, rotation_min=(-10, 20, 30), rotation_max=(10, 30, 40),
                               cut_min_mm=.2, cut_max_mm=.4, random_xy=True,
@@ -32,8 +26,7 @@ def test_seeded_gather_ranges_and_metadata(tmp_path):
     second = gather(small_sim(), tmp_path, settings)
     assert first["status"] == second["status"] == "complete"
     assert first["directory"] != second["directory"]
-    path, rows = records(first)
-    other, rows2 = records(second)
+    path, other = Path(first["directory"]), Path(second["directory"])
     assert len(rows) == 3 and (path / "processed_mesh.ply").is_file()
     for a, b in zip(rows, rows2):
         assert np.all(np.array(a["rotation_xyz_deg"]) >= settings.rotation_min)
@@ -68,18 +61,18 @@ def test_labelled_capture_reservations_increment_without_subfolders(tmp_path):
 def test_labelled_gather_records_settings_and_increments(tmp_path):
     settings = GatherSettings(count=1, random_rotation=False, random_cut=False,
                               save_layout='object_label', object_label='cube test')
-    first = gather(small_sim(), tmp_path, settings)
-    second = gather(small_sim(), tmp_path, settings)
-    assert Path(first['directory']) == tmp_path/'cube test'
-    assert Path(second['directory']) == tmp_path/'cube test'
-    assert (tmp_path/'cube test'/'sample_000001_tactile.png').is_file()
-    assert (tmp_path/'cube test'/'sample_000002_tactile.png').is_file()
-    assert not [path for path in (tmp_path/'cube test').iterdir() if path.is_dir()]
-    record = json.loads((Path(first['directory'])/'run_000001.json').read_text())
-    assert record['settings']['save_layout'] == 'object_label'
-    assert record['settings']['object_label'] == 'cube test'
-    assert (tmp_path/'cube test'/'manifest_000001.jsonl').is_file()
-    assert (tmp_path/'cube test'/'manifest_000002.jsonl').is_file()
+    rows, rows2 = [], []
+    first = gather(small_sim(), tmp_path, settings, progress=rows.append)
+    second = gather(small_sim(), tmp_path, settings, progress=rows2.append)
+    assert Path(first['directory']) == tmp_path/'tactile'/'cube test'
+    assert Path(second['directory']) == tmp_path/'tactile'/'cube test'
+    assert (tmp_path/'tactile'/'cube test'/'sample_000001_tactile.png').is_file()
+    assert (tmp_path/'tactile'/'cube test'/'sample_000002_tactile.png').is_file()
+    assert (tmp_path/'clean'/'cube test'/'sample_000001_tactile_clean.png').is_file()
+    assert (tmp_path/'default'/'cube test'/'sample_000001_tactile_default.png').is_file()
+    assert not [path for path in (tmp_path/'tactile'/'cube test').iterdir() if path.is_dir()]
+    assert not list((tmp_path/'tactile'/'cube test').glob('run_*.json'))
+    assert not list((tmp_path/'tactile'/'cube test').glob('manifest_*.jsonl'))
     with pytest.raises(ValueError, match='object label'):
         GatherSettings(save_layout='object_label', object_label='').validate()
 
@@ -91,15 +84,15 @@ def test_cancel_preserves_frames_and_fixed_pose(tmp_path):
     result = gather(sim, tmp_path, GatherSettings(count=5, random_rotation=False, random_cut=False),
                     cancelled=lambda: len(saved) == 2, progress=saved.append)
     assert result["status"] == "cancelled" and result["completed"] == 2
-    path, rows = records(result)
-    assert len(rows) == 2
-    assert rows[0]["rotation_xyz_deg"] == [10, 20, 30]
-    assert rows[0]["cut_depth_m"] == .0005
-    assert rows[0]["offset_xy_m"] == [.001, -.001]
+    path = Path(result["directory"])
+    assert len(saved) == 2
+    assert saved[0]["rotation_xyz_deg"] == [10, 20, 30]
+    assert saved[0]["cut_depth_m"] == .0005
+    assert saved[0]["offset_xy_m"] == [.001, -.001]
     assert len(list(path.glob("sample_*_settings.json"))) == 2
 
 
-def test_failed_frame_is_not_manifested(tmp_path, monkeypatch):
+def test_failed_frame_keeps_only_the_partial_directory(tmp_path, monkeypatch):
     sim = small_sim()
     export = sim.export
     calls = []
@@ -111,12 +104,13 @@ def test_failed_frame_is_not_manifested(tmp_path, monkeypatch):
         return export(path, **kwargs)
     monkeypatch.setattr(sim, "export", fail_second)
     result = gather(sim, tmp_path, GatherSettings(count=3))
-    path, rows = records(result)
+    path = Path(result["directory"])
     assert result["status"] == "failed" and result["completed"] == 1
-    assert len(rows) == 1
+    assert (path / "sample_000001_tactile.png").is_file()
     assert (path / "sample_000002.partial").exists()
     assert not (path / "sample_000002").exists()
-    assert json.loads((path / "run.json").read_text())["error"] == "simulated disk failure"
+    assert not list(path.glob("run*.json"))
+    assert not list(path.glob("manifest*.jsonl"))
 
 
 def test_invalid_ranges_do_not_create_dataset(tmp_path):
@@ -175,7 +169,7 @@ def test_gizmo_pose_and_background_collection(tmp_path):
         assert panel.progress.value() == 2
         assert "Complete: 2" in panel.status.text()
         assert (window.sim.rotation, window.sim.offset, window.sim.cut_depth) == preview_pose
-        run = next((tmp_path / "box").iterdir())
+        run = next((tmp_path / "tactile" / "box").iterdir())
         assert np.load(run / "sample_000001_depth_m.npy").shape == (window.output_h.value(), window.output_w.value())
         window.capture_to_folder()
         assert window.gather_worker is not None
@@ -183,7 +177,7 @@ def test_gizmo_pose_and_background_collection(tmp_path):
         from capture_helpers import wait_capture
         wait_capture(window)
         assert panel.capture.isEnabled()
-        assert len(list((tmp_path / "box").iterdir())) == 2
+        assert len(list((tmp_path / "tactile" / "box").iterdir())) == 2
     finally:
         if window.gather_worker is not None:
             window.stop_gather()

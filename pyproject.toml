@@ -15,6 +15,8 @@ dependencies = [
     "trimesh>=4.0",
     "opencv-python>=4.9",
     "pyyaml>=6.0",
+    "Pillow",
+    "matplotlib",
     "pyvista>=0.44",
     "pyvistaqt",
     "PyQt5",
@@ -23,7 +25,8 @@ dependencies = [
 
 [project.optional-dependencies]
 gui = ["pyvista>=0.44", "pyvistaqt", "PyQt5", "qtpy"]
-dev = ["pytest", "matplotlib", "scikit-image"]
+dev = ["pytest", "scikit-image"]
+train = ["scikit-learn"]
 
 [project.scripts]
 mesh2tact = "mesh2tact.cli:main"

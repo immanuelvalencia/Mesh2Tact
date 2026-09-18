@@ -294,6 +294,9 @@ class GeometricWindow(PresetMixin, QtWidgets.QMainWindow):
             self.model_label.setText(str(mesh))
         if sensor is None:
             default_path = self.sensor_configs.directory / "GelSightV1.json"
+            relief_path = self.sensor_configs.directory / "GelSightV1 depth relief.json"
+            if relief_path.exists():
+                default_path = relief_path
             if default_path.exists():
                 self.sensor_configs.load(default_path)
                 self.sensor_configs.selector.blockSignals(True)

@@ -165,6 +165,13 @@ class OpticsConfig:
     # Sensor noise, applied after shading (std-dev in 0-1 units).
     noise_sigma: float = 0.006
     exposure: float = 1.0
+    # Optional empirical depth cue, in inverse millimetres. Zero preserves fits.
+    depth_shading: float = 0.0
+    depth_relief: float = 0.0  # centre lift and soft perimeter shading
+    # Optional height-field shadow cue from a separate virtual directional light.
+    shadow_strength: float = 0.0
+    shadow_azimuth: float = 45.0
+    shadow_elevation: float = 20.0
     reference_background: bool = True
     side_lighting: bool = True
     side_distance: float = 1.1

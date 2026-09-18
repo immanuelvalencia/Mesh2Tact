@@ -2,217 +2,269 @@
 
 # Mesh2Tact
 
-### A Mesh-to-Tactile Generation of Synthetic Datasets for Visuo-Tactile Sensing
+### From 3D mesh geometry to synthetic tactile images and datasets
 
-Generate synthetic tactile images, geometric depth maps, and contact masks from 3D meshes.
+Mesh2Tact is a desktop application and Python package for generating GelSight-style tactile RGB images, geometric depth maps, and contact masks from 3D meshes.
 
-**[Quick start](#quick-start) · [Usage](#usage) · [Dataset outputs](#dataset-outputs) · [Paper and authors](#paper-and-authors)**
+**[Install](#install) · [Use the app](#use-the-app) · [Prepare and train](#prepare-and-train-classifiers) · [Outputs](#outputs) · [Python API](#python-api) · [Limitations](#limitations)**
 
 </div>
 
----
+![Example synthetic tactile contact](docs/images/tactile-contact-example.png)
 
-## Overview
+*An example Mesh2Tact tactile RGB render. The appearance is configurable; it is a synthetic image, not a physical-sensor measurement.*
 
-Mesh2Tact is a Python desktop application and programmatic generator for creating synthetic visuo-tactile datasets from 3D meshes. It projects mesh geometry onto a virtual sensor plane, derives a contact depth map, and renders a GelSight-style RGB image using configurable lighting, background appearance, and image effects.
+## What it does
 
-The desktop interface supports mesh positioning, sensor configuration, reference-image fitting, and automated data collection. A Python API provides rendering and dataset generation without opening the interface.
+Mesh2Tact projects a loaded mesh onto a virtual sensor plane, computes the visible contact depth, and renders a configurable tactile appearance. It is intended for repeatable dataset creation, renderer development, and reference-guided appearance fitting.
 
-### Features
+| Input | Mesh2Tact processing | Selected outputs |
+| --- | --- | --- |
+| STL, OBJ, or PLY mesh | Pose, scale, geometric projection, and contact-depth calculation | Tactile RGB and clean RGB PNGs |
+| Sensor configuration | Background, lighting, colour response, and image effects | Depth PNG and depth arrays in metres |
+| Optional reference photos | Fixed-pose, shared-appearance fitting | Contact mask, processed mesh, and settings JSON |
 
-- **Mesh-based generation:** load STL, OBJ, or PLY geometry and adjust its scale, position, orientation, and penetration.
-- **Interactive inspection:** view the object alongside tactile RGB, geometric depth, raw depth, contact masks, and encoded surface normals.
-- **Configurable sensor appearance:** control sensor dimensions, background colors and gradients, directional lighting, blur, vignette, noise, and texture.
-- **Reference-image fitting:** align real contact photographs and fit a shared sensor configuration across a reference collection.
-- **Automated collection:** sample rotation, penetration, position, and image-effect seeds within configurable ranges.
-- **Traceable exports:** save selected image and array outputs with per-sample settings, run metadata, and a manifest.
-- **Optional classification:** compare predictions from supported, locally supplied torchvision checkpoints.
+## Key capabilities
 
-## Paper and authors
+- **Interactive mesh setup** — load a mesh, set units and scale, and adjust position, rotation, and indentation using numeric controls or scene handles.
+- **Multi-view inspection** — inspect the tactile image, geometric depth, raw depth, contact mask, and encoded surface normals.
+- **Configurable tactile appearance** — tune sensor dimensions, pad/background colour, gradients, lighting, blur, vignette, texture, noise, contrast, gamma, and deterministic effect seeds.
+- **Reference-guided calibration** — align and save several contact photographs, optionally reserve references for validation, and fit one shared appearance configuration.
+- **Reproducible collection** — generate captures with seeded ranges for pose, indentation, in-plane position, and image-effect seeds.
+- **Selective exports** — choose exactly which RGB, geometric, mesh, and per-sample metadata files to save.
+- **Optional local prediction** — run compatible local torchvision checkpoints against the current tactile RGB image.
 
-**Paper title**
+## Install
 
-*Mesh2Tact: A Mesh-to-Tactile Generation of Synthetic Datasets for Visuo-Tactile Sensing*
+Mesh2Tact requires Python 3.10+ and a graphical desktop with OpenGL support for the Qt/VTK interface. The portable Conda file targets Python 3.11 and your `torch_gpu` environment.
 
-**Project and paper authors, in author order**
-
-Immanuel Jose Valencia, Ryan Rhay Vicerra, Aaron Raymond See, Renann Baldovino, Robert Kerwin Billones, Elmer Dadios, Argel Bandala, and Raouf Naguib
-
-Manuscript source is maintained in [`publication/manuscript/`](publication/manuscript/), with separate Markdown files for the available sections and a consolidated reference list. Publication venue, year, and DOI will be added when confirmed.
-
-## Quick start
-
-### Requirements
-
-- Python **3.10 or newer**; the example below uses Python 3.11.
-- Conda for environment management.
-- A desktop environment for the Qt/VTK interface.
-
-The geometric renderer does not require CUDA or a physics engine. The optional **Predict** feature requires PyTorch, torchvision, and compatible model checkpoints.
-
-### Installation
-
-```powershell
+```bash
 git clone https://github.com/immanuelvalencia/Mesh2Tact.git
 cd Mesh2Tact
 
-conda create -n mesh2tact python=3.11 -y
-conda activate mesh2tact
-python -m pip install -e ".[gui,dev]"
+conda env update -n torch_gpu -f environment.yml
+conda activate torch_gpu
+python -m pip install --no-deps -e .
 ```
 
-If you already use the project's `torch_gpu` Conda environment, activate it and run the editable installation there instead.
+If `torch_gpu` does not exist on the Linux machine, create it with `conda env create -f environment.yml` instead of the update command. The Conda file installs Qt, VTK, and the other native dependencies; the final pip command registers Mesh2Tact without replacing those Conda packages. Do not use `--prune` when updating an existing GPU environment.
 
-Dependencies are declared in [`pyproject.toml`](pyproject.toml). The included `environment.yml` and `requirements.txt` are historical environment snapshots; the installation above uses the package's declared dependencies and avoids machine-specific paths in those snapshots.
+PyTorch and torchvision are needed for classifier training and the **Predict** tab. They are deliberately absent from the app dependency files so you can keep the versions and CUDA build selected for `torch_gpu`. Check that both import in the Linux environment before training or using prediction.
 
-### Launch
+For a pip-based installation in an already prepared environment, run `python -m pip install -r requirements.txt`. [pyproject.toml](pyproject.toml) is the source of package dependencies; `requirements.txt` is a portable editable-install shortcut, with no machine-specific paths or pinned Windows builds.
+
+## Launch
 
 ```powershell
 python main.py
 ```
 
-Open an example mesh on launch:
+Load an example directly:
 
 ```powershell
-python main.py assets/sphere.stl
+python main.py assets/shape/sphere.stl
 ```
 
-The installed command provides the same entry point:
+The editable installation also provides:
 
 ```powershell
 mesh2tact
 mesh2tact --list-sensors
 ```
 
-## Usage
+## Use the app
 
-### 1. Load and position a mesh
+### 1. Load a mesh
 
-Choose **Load STL…** in **General object**, then select a mesh. Check its import units and scale; STL inputs default to millimetres. Use the translation handles, rotation rings, or numeric controls to position it over the sensor.
+In **General object**, select **Load STL…** and choose an STL, OBJ, or PLY mesh. Confirm the import units and scale: STL files default to millimetres. Position the object with the scene handles, rotation rings, or numeric controls.
 
-The sensor plane is fixed at **Z = 0**. Object Z describes the mesh origin, so first contact depends on the mesh geometry and orientation. **Maximum penetration** bounds how far the object's lowest point can extend below the sensor plane.
+The sensor plane is fixed at `Z = 0`. An object's Z value is its mesh-origin position, so the geometry and orientation determine first contact. **Maximum penetration** limits how far the lowest mesh point can extend below the plane.
 
-Mesh refinement increases sampling density; it does not recover missing geometric detail. Optional smoothing changes the mesh shape.
+### 2. Choose or tune a sensor
 
-### 2. Configure the sensor
+Load a saved configuration from [configs/sensors](configs/sensors), then use **Settings** to adjust the sensor geometry, background, lighting, and image effects. Capture resolution sets the saved image dimensions; preview scale affects only the interactive preview.
 
-Select a saved configuration from [`configs/sensors/`](configs/sensors/), or open **Settings** to adjust:
+For a depth-based visual cue, **Tactile lighting → Depth shading** applies an empirical attenuation to the RGB appearance. **Directional shadows** is a separate experimental occlusion cue. Neither changes the exported depth, normal, or contact-mask arrays, and neither is a calibrated optical or deformation model.
 
-| Control group | Configuration |
-| --- | --- |
-| Sensor geometry | Physical dimensions, edge softness, and depth display range |
-| Background | Base color, gradients, brightness, and color response |
-| Lighting | LED colors, edge positions, intensity, and diffuse/specular response |
-| Image effects | Noise, texture, blur, vignette, contrast, gamma, and seeds |
+### 3. Fit an appearance to reference images (optional)
 
-Capture resolution controls saved output dimensions. **Preview scale** changes interactive preview resolution. Image effects modify RGB outputs without changing geometric depth or contact masks.
+Use the **Calibration** tab to upload a reference image, name and align its mesh contact, then save it into a collection. Repeat for each contact; use **No shape** for an empty-pad image. **Calibrate all saved references** estimates a shared appearance configuration, while entries marked **Validation only** are evaluated but excluded from fitting.
 
-Save a named sensor configuration to reuse the same appearance across captures and collection runs.
+The default optimisation is bounded robust least squares. The local AI-assisted surrogate option is experimental and still concludes with robust least-squares refinement. Fitting estimates appearance parameters only: it does not establish force, elasticity, physical depth, or independent sensor validation. See the [calibration guide](docs/calibration.md) for the full workflow and saved artifacts.
 
-### 3. Fit reference images, if available
+### 4. Collect a dataset
 
-In **Calibration**, add reference photographs, align each mesh and pose to its contact image, and save the references into a collection. **Calibrate all saved references** fits a shared sensor configuration. References marked for validation stay outside fitting.
+Open **Data gathering**, select the payloads, sample count, parameter ranges, output layout, and seed, then begin collection. A run uses a snapshot of the object and settings at its start. Rotation components are sampled independently within their Euler-angle ranges, so they are not uniformly distributed over 3D orientation. Empty contacts are retained.
 
-See the [calibration guide](docs/calibration.md) for the workflow, fitting controls, and estimation limits. Reference photographs and calibration session archives are local inputs and are not bundled with this repository.
+## Prepare and train classifiers
 
-### 4. Capture a dataset
+Run the dataset preparation interface from `torch_gpu`:
 
-Use **Data gathering** to capture the current frame or collect an automatic batch. Choose the output payloads, sample count, parameter ranges, and random seed before starting.
-
-Automatic collection can vary XYZ rotation, penetration, XY position, and image-effect seeds. Rotation angles are sampled independently within their ranges; this does not produce a uniform distribution over all 3D orientations. Empty contacts are retained.
-
-A batch uses a snapshot of the object and settings taken at its start. Stopping a run finishes the current sample and preserves completed captures.
-
-### Optional: classify a tactile image
-
-The **Predict** tab evaluates the current tactile RGB image using supported local `.pth` checkpoints. Select a model folder containing checkpoints and corresponding label files (`labels.txt`, `classes.txt`, `labels.json`, or `classes.json`). Supported model families include ResNet, DenseNet, EfficientNet, Swin, and ViT.
-
-PyTorch and torchvision must be installed in the environment running Mesh2Tact. Model weights and training datasets are not included.
-
-## Dataset outputs
-
-The default layout groups captures by object and run time:
-
-```text
-data/<model-name>/<date-time>/
-├── run.json
-├── manifest.jsonl
-├── processed_mesh.ply
-├── sample_000001_tactile.png
-├── sample_000001_tactile_clean.png
-├── sample_000001_depth.png
-├── sample_000001_depth_m.npy
-├── sample_000001_raw_depth_m.npy
-├── sample_000001_contact.png
-└── sample_000001_settings.json
+```bash
+conda activate torch_gpu
+python preprocess.py
 ```
 
-Payload files depend on the selected save options. Run metadata and the manifest are always written.
+Browse the parent folder containing `clean/`, `tactile/`, and `default/` (for example, `data/`). Click **Scan and compare branches** before export. The scan checks class names, sample IDs, image readability and size, unexpected files, and repeated RGB images. It matches `sample_000310_clean`, `sample_000310_tactile`, and `sample_000310_default` by the shared `sample_000310` capture index (older `*_tactile_clean` and `*_tactile_default` filenames are also accepted). Each triplet must have the same class and dimensions; its RGB pixels are expected to differ. The report shows issues and the number of complete triplets available per class.
 
-| Output | Contents |
+Set the train, validation, and test percentages (totalling 100) and choose a new output folder. **Exclude missing, duplicate, or invalid captures from all three OUTPUT datasets** is enabled by default. It omits every problematic capture index from clean, tactile, and default together; no source photo is deleted or moved. The default grouping keeps each nested class subfolder (such as a trial or collection run) in one split; flat class folders use sample IDs. Turn off subfolder grouping only when the samples inside each folder are independent acquisitions. Captures with `contact_fraction: 0` in a matching settings JSON are excluded. Every class needs at least three groups for the three splits. Requested percentages are targets because groups can contain different numbers of images.
+
+The scan report distinguishes missing filename pairs (`unmatched_files`) from duplicate or unreadable content (`excluded_samples` and `issues`). Both kinds are handled by the output exclusion option. `summary.json` records the excluded indices and the number omitted from each output branch.
+
+Enable **Balance classes within train, validation, and test** to downsample each split to its smallest class. Selection is seeded and applied to complete clean/tactile/default triplets, so every branch keeps the same class counts, capture indices, and split assignments. This does not delete source photos. `summary.json` records the number of triplets omitted per class and split; balancing may shift the final train/validation/test percentages away from the requested targets.
+
+The exported structure is standard torchvision `ImageFolder` input, with the same sample IDs and split assignment for all three image types:
+
+```text
+ml_dataset/
+├── labels.txt
+├── paired_manifest.csv
+├── summary.json
+├── clean/
+│   ├── labels.txt
+│   ├── manifest.csv
+│   ├── train/<class>/image_000001.png
+│   ├── val/<class>/image_000001.png
+│   └── test/<class>/image_000001.png
+├── tactile/    # Same labels and split/sample assignments
+└── default/    # Same labels and split/sample assignments
+```
+
+The export renames each matched triplet to the same `image_######.png` name in all three branches. `paired_manifest.csv` maps that output name back to its original `sample_######` index and records its shared split and class. Inspect `summary.json` for issue counts and excluded indices. Training resizes RGB images to 224 × 224 and applies ImageNet channel normalization, matching the Predict tab.
+
+Launch the training interface from `torch_gpu`:
+
+```bash
+python train.py
+```
+
+Browse the prepared `ml_dataset/` folder (or one image-type branch), choose whether to train all three branches separately, then click **Detect and confirm labels**. The interface shows all 43 supported architectures grouped by family. Select a family, individual models, or **Select all architectures**; the selected queue is displayed in the log and runs one model at a time. For each selected architecture and weight variant, the order is **tactile → default → clean**, then the next architecture begins. Set epochs, batch size, learning rate, patience, seed, workers, weight source, device, and the number of held-out test photos per label before starting. The interface streams the full terminal-style training log and shows current-model and overall-queue percentage bars. Its live readout includes model, epoch, train/validation/test phase, batch count, loss, and accuracy. Progress is reported at roughly 10% batch intervals per phase. **Stop training** requests a stop after the current batch and prevents later models from starting; if training does not respond within eight seconds, the UI force-stops the process. Completed model exports remain available, but an interrupted model's export may be incomplete.
+
+The command-line workflow remains available. For example, train one architecture first:
+
+```bash
+python train.py --dataset-dir ml_dataset --image-type tactile --models resnet18 --epochs 20
+```
+
+Use `--image-type clean` or `--image-type default` for the other exports, or `--all-image-types` to train three independent models with the same selected architecture, seed, and hyperparameters on the aligned data. For example: `python train.py --dataset-dir ml_dataset --all-image-types --models resnet18 --epochs 20`. You can also point `--dataset-dir` directly at `ml_dataset/clean`, `ml_dataset/tactile`, or `ml_dataset/default` without an image-type flag. `train.py` uses the architecture families and validation approach from the supplied `train_suite.py`. Select models with `--models`, a family flag such as `--resnet` or `--swin`, or `--all` for all 43 supported architectures. `--weights default` downloads torchvision pretrained weights if they are not cached; use `--weights none` for training from scratch or `--weights all` for every available weight variant. Batch size, learning rate, patience, seed, worker count, device, and output folder are configurable with `--help`.
+
+Every launch creates one timestamped session, and every image-type/architecture/weight combination gets its own self-contained run folder. For one ResNet-18 trained on all three image types, the layout is:
+
+```text
+train/session_YYYYMMDD_HHMMSS_id/
+├── session_config.json
+├── session_summary.json
+├── runs.csv
+├── comparison.csv
+└── runs/
+    ├── 001_tactile_resnet18_.../
+    ├── 002_default_resnet18_.../
+    └── 003_clean_resnet18_.../
+        ├── best_resnet18_..._model.pth
+        ├── last_resnet18_..._model.pth
+        ├── labels.txt
+        ├── run_config.json
+        ├── run_status.json
+        ├── training_log.txt
+        ├── metrics.json
+        ├── history.csv
+        ├── training_history.png
+        ├── classification_report.json
+        ├── classification_report.txt
+        ├── confusion_matrix.csv
+        ├── confusion_matrix.png
+        ├── test_predictions.csv
+        ├── test_grid_predictions.csv
+        └── sample_images/
+            ├── test_grid.png
+            ├── test_grid_manifest.csv
+            └── images/*.png
+```
+
+The abbreviated files shown under `003_clean_...` are also saved in each tactile and default run folder. `runs.csv` lists the completed models; `comparison.csv` is written for three-branch training. Only held-out test photos enter `sample_images/`, never train or validation images. **Best** is selected by validation loss; **last** preserves the final completed epoch. Point Mesh2Tact's **Predict** tab at a run folder to load either checkpoint. Splitting renderings from the same class measures performance on new images of those classes; it does not establish recognition of unseen object instances or physical sensor images.
+
+## Outputs
+
+For date/time layout, outputs are organized by image type, mesh label, and run. Exact files depend on the selected save options.
+
+```text
+data/
+├── tactile/<shape>/<date-time>/
+│   ├── processed_mesh.ply
+│   ├── sample_000001_tactile.png
+│   ├── sample_000001_depth.png
+│   ├── sample_000001_depth_m.npy
+│   ├── sample_000001_raw_depth_m.npy
+│   ├── sample_000001_contact.png
+│   └── sample_000001_settings.json
+├── clean/<shape>/<date-time>/
+└── default/<shape>/<date-time>/
+```
+
+| Output | Description |
 | --- | --- |
-| Tactile RGB | Rendered sensor appearance with selected image effects |
-| Clean tactile RGB | Rendered image before image effects |
-| Depth PNG | Depth visualization |
-| Depth arrays | Floating-point geometric depth in **metres** |
+| Tactile RGB | Configured tactile render with selected image effects |
+| Clean tactile RGB | Tactile render before image effects |
+| Default tactile RGB | Render using the built-in Default sensor profile |
+| Depth PNG | Visualized geometric depth |
+| Depth arrays | Floating-point geometric depth in metres |
 | Contact mask | Projected contact region |
-| Processed mesh | Mesh in metres, before the sample pose transformation |
-| Settings and manifest | Sample configuration, filenames, pose, penetration, seed, and contact fraction |
+| Processed mesh | Mesh in metres, before each sample pose transformation |
+| Settings JSON | Sample pose, indentation, seed, and contact fraction |
 
-The **Object label with index** layout saves sequentially numbered samples directly under `data/<object-label>/`, with indexed run and manifest files. Sample numbering continues from existing captures.
-
-Generated datasets, trained weights, reference-library PDFs, and rendered publication outputs are excluded from Git. Some publication scripts require these separately maintained local inputs.
+The **Object label with index** layout writes numbered samples directly under each `<type>/<shape>/` folder and continues from existing tactile captures.
 
 ## Python API
 
-Render a single contact and generate a small dataset without opening the GUI:
+Use the same renderer and collection code without opening the interface:
 
 ```python
 from mesh2tact.geometric import GeometricSim
 from mesh2tact.gather import GatherSettings, gather
 
 sim = GeometricSim()
-sim.load("assets/sphere.stl", units="mm")
-sim.cut_depth = 0.001  # 1 mm penetration relative to first contact
+sim.load("assets/shape/sphere.stl", units="mm")
+sim.cut_depth = 0.001  # 1 mm indentation after first contact
 
-depth, rgb = sim.render()
+depth_m, tactile_rgb = sim.render()
 
 settings = GatherSettings(count=10, seed=42)
 result = gather(sim, "data", settings)
 ```
 
-`GatherSettings` enables random rotation and penetration by default. Set `random_rotation=False` and `random_cut=False` to preserve the current pose and penetration. The `gather` function updates the supplied simulator during collection; use a separate instance when its state must be preserved.
+`GatherSettings` enables random rotation and indentation by default. Set `random_rotation=False` and `random_cut=False` to retain the configured pose and indentation. `gather()` updates the supplied simulator during collection; use a separate instance if its state must remain unchanged.
 
-## Repository structure
+## Repository layout
 
 ```text
 Mesh2Tact/
-├── mesh2tact/             # Geometry, rendering, calibration, collection, and GUI
-├── assets/               # Example meshes
-├── configs/              # Sensor and geometric configurations
-├── benchmarks/           # Benchmark scripts and selected records
-├── docs/                 # Detailed documentation
-├── publication/
-│   ├── manuscript/       # Markdown manuscript sections and references
-│   └── scripts/          # Manuscript and figure preparation tools
-├── tests/                # Automated tests
-├── tools/                # Reference-image calibration utilities
-├── main.py               # Desktop entry point
-└── pyproject.toml        # Package metadata and dependencies
+├── mesh2tact/       # Renderer, geometry, calibration, collection, GUI, and CLI
+├── assets/          # Example meshes
+├── configs/         # Sensor and geometric configurations
+├── docs/            # User documentation and README figures
+├── benchmarks/      # Benchmark scripts and records
+├── tests/           # Automated tests
+├── tools/           # Calibration utilities
+├── publication/     # Manuscript source and figure-generation tools
+├── preprocess.py     # Dataset preparation interface and split exporter
+├── train.py          # Sequential classifier trainer and UI entry point
+├── train_ui.py       # Training desktop interface
+├── main.py          # Desktop entry point
+└── pyproject.toml   # Package metadata and dependencies
 ```
 
 ## Development
 
-Activate the environment used for installation, then run:
+Activate the environment used for installation and run:
 
 ```powershell
 python -m pytest tests -q
 ```
 
-The repository uses `main` for the shared baseline and `develop` for ongoing development. Create feature or fix branches from `develop` and describe relevant validation when proposing changes.
+Generated datasets, reference images, calibration archives, model weights, and rendered publication outputs are intentionally excluded from version control.
 
-## Scope and limitations
+## Limitations
 
-Mesh2Tact uses geometric projection and image-based appearance rendering. It does not solve contact forces, elasticity, shear, or physical gel deformation. The depth representation follows the surface visible from below the sensor plane and cannot represent hidden undercuts or gel wrapping.
+Mesh2Tact uses geometric projection plus image-based appearance rendering. It does not simulate contact forces, elastic gel deformation, shear, or physical light transport. Depth represents the surface visible from below the sensor plane and cannot capture hidden undercuts or gel wrapping.
 
-Fitting rendered images to reference photographs estimates appearance parameters. It does not by itself establish metric depth accuracy, force calibration, or independent agreement with a physical sensor. Those claims require separate measurements and evaluation.
+Reference-image fitting estimates renderer appearance parameters. A lower image residual does not, by itself, demonstrate metric-depth accuracy, force calibration, generalization, or agreement with a physical sensor. Those require separate measurement and evaluation.

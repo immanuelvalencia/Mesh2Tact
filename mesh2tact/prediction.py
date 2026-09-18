@@ -14,6 +14,8 @@ from typing import Mapping
 
 import numpy as np
 
+from .architectures import ALL_MODELS
+
 
 LABEL_FILENAMES = ("labels.txt", "classes.txt", "labels.json", "classes.json")
 
@@ -113,16 +115,7 @@ def _checkpoint_state(checkpoint: Path, torch):
     return state
 
 
-SUPPORTED_ARCHITECTURES = (
-    "efficientnet_v2_s", "efficientnet_v2_m",
-    "swin_v2_t", "swin_v2_s", "swin_v2_b",
-    "vit_b_16", "vit_b_32", "vit_l_32",
-    "efficientnet_b0", "efficientnet_b1", "efficientnet_b2", "efficientnet_b3",
-    "efficientnet_b4", "efficientnet_b5", "efficientnet_b6", "efficientnet_b7",
-    "densenet121", "densenet161", "densenet169", "densenet201",
-    "resnet18", "resnet34", "resnet50", "resnet101", "resnet152",
-    "swin_t", "swin_s", "swin_b",
-)
+SUPPORTED_ARCHITECTURES = tuple(sorted(ALL_MODELS, key=len, reverse=True))
 
 
 def _resnet_name(state: Mapping[str, object]) -> str:
@@ -161,15 +154,20 @@ def architecture_name(candidate: ModelCandidate, state: Mapping[str, object]) ->
         return _resnet_name(state)
     raise ValueError(
         "Cannot identify the torchvision architecture from this checkpoint path. "
-        "Supported families: ResNet, DenseNet, EfficientNet, Swin, and ViT."
+        "Supported families: ResNet, DenseNet, EfficientNet, MobileNet, ConvNeXt, Swin, ViT, and RegNet."
     )
 
 
 def _classifier_weights(state: Mapping[str, object]):
-    for key in ("fc.weight", "classifier.weight", "classifier.1.weight", "head.weight", "heads.head.weight"):
+    for key in ("fc.weight", "classifier.weight", "head.weight", "heads.head.weight"):
         weights = state.get(key)
         if hasattr(weights, "shape") and len(weights.shape) == 2:
             return weights
+    for key in sorted(state, reverse=True):
+        if key.startswith("classifier.") and key.endswith(".weight"):
+            weights = state[key]
+            if hasattr(weights, "shape") and len(weights.shape) == 2:
+                return weights
     raise ValueError("Checkpoint has no supported torchvision classifier weights")
 
 
@@ -181,7 +179,8 @@ def predict_classifier(image_rgb: np.ndarray, candidate: ModelCandidate, top_k: 
         raise ValueError("Prediction expects an H x W x 3 RGB tactile image")
     try:
         import torch
-        from torchvision import models
+        from PIL import Image
+        from torchvision import models, transforms
     except ImportError as exc:
         raise RuntimeError(
             "PyTorch and TorchVision must be installed in the environment that launches Mesh2Tact."
@@ -199,12 +198,9 @@ def predict_classifier(image_rgb: np.ndarray, candidate: ModelCandidate, top_k: 
     model.load_state_dict(state, strict=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device).eval()
-    array = np.ascontiguousarray(image_rgb.astype(np.float32) / 255.0)
-    tensor = torch.from_numpy(array).permute(2, 0, 1).unsqueeze(0)
-    tensor = torch.nn.functional.interpolate(tensor, size=(224, 224), mode="bilinear", align_corners=False)
-    mean = torch.tensor((0.485, 0.456, 0.406)).view(1, 3, 1, 1)
-    std = torch.tensor((0.229, 0.224, 0.225)).view(1, 3, 1, 1)
-    tensor = ((tensor - mean) / std).to(device)
+    transform = transforms.Compose((transforms.Resize((224, 224)), transforms.ToTensor(),
+                                    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))))
+    tensor = transform(Image.fromarray(np.asarray(image_rgb, dtype=np.uint8), mode="RGB")).unsqueeze(0).to(device)
     with torch.inference_mode():
         probabilities = torch.softmax(model(tensor)[0], dim=0).detach().cpu().numpy()
     count = min(max(1, int(top_k)), len(candidate.labels))

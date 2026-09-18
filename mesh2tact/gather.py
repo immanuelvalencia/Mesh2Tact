@@ -1,7 +1,6 @@
 """Reproducible geometric data collection, independent of Qt."""
 from dataclasses import dataclass, asdict, field
-from datetime import datetime
-import json
+import os
 from pathlib import Path
 from uuid import uuid4
 from .outputs import SaveOptions, create_run_directory, reserve_labelled_capture
@@ -51,89 +50,86 @@ class GatherSettings:
 
 
 def gather(sim, directory, settings, cancelled=lambda: False, progress=lambda record: None):
-    """Run on a private simulator snapshot. Keep complete samples on stop/error.
+    """Run on a private simulator snapshot and save only selected payloads.
 
-    A sample is only listed after all its files have been written and its
-    staging directory renamed. A failed partial directory is retained for
-    diagnosis but never included in the manifest.
+    Each sample is staged until all selected outputs have been written, then
+    moved into its final flat output folder. No run JSON or manifest is made.
+    Partial directories are retained if an output operation fails.
     """
     settings.validate()
     if sim.max_penetration is not None and settings.random_cut and settings.cut_max_mm > sim.max_penetration*1000+1e-9:
         raise ValueError('Requested indentation range exceeds the maximum indentation depth')
     indexed = settings.save_layout == 'object_label'
     reservations = []
+    # The tactile branch is the canonical location. RGB variants live beside it
+    # under their own top-level data folders so datasets can be addressed by
+    # image type without copying files.
+    root = Path(directory).expanduser().resolve()
     if indexed:
-        out, first_index, reservations = reserve_labelled_capture(directory, settings.object_label, settings.count)
+        out, first_index, reservations = reserve_labelled_capture(root / "tactile", settings.object_label, settings.count)
     else:
-        out, first_index = create_run_directory(directory, sim.source), 1
-    run_name = f"run_{first_index:06d}.json" if indexed else 'run.json'
-    manifest_name = f"manifest_{first_index:06d}.jsonl" if indexed else 'manifest.jsonl'
+        out, first_index = create_run_directory(root / "tactile", sim.source), 1
+    # Indexed captures have no run subfolder (``.../tactile/<shape>``), while
+    # date/time captures do (``.../tactile/<shape>/<run>``).
+    shape = out.name if indexed else out.parent.name
+    variant_leaf = Path() if indexed else Path(out.name)
+    variant_directories = {
+        "tactile": out,
+        "clean": root / "clean" / shape / variant_leaf,
+        "default": root / "default" / shape / variant_leaf,
+    }
     mesh_name = f"processed_mesh_{first_index:06d}.ply" if indexed else 'processed_mesh.ply'
     state = dict(status="running", completed=0, requested=settings.count,
                  settings=asdict(settings), source=sim.source,
                  sampling="Independent uniform Euler XYZ angles and uniform cut/XY ranges",
                  directory=str(out), first_sample_index=first_index,
-                 run_file=run_name, manifest_file=manifest_name)
-
-    def save_state():
-        temporary = out / (run_name + '.tmp')
-        temporary.write_text(json.dumps(state, indent=2), encoding="utf-8")
-        temporary.replace(out / run_name)
-
-    try:
-        save_state()
-    except Exception:
-        for reservation in reservations:
-            reservation.unlink(missing_ok=True)
-        raise
+                 output_directories={name: str(path) for name, path in variant_directories.items()})
     rng = np.random.default_rng(settings.seed)
     initial_z = sim.object_z
     try:
         if settings.outputs.mesh:
             sim.mesh.export(out / mesh_name)
-        with (out / manifest_name).open("x", encoding="utf-8") as manifest:
-            for local_index in range(settings.count):
-                if cancelled():
-                    state["status"] = "cancelled"
-                    break
-                if settings.random_rotation:
-                    sim.rotation = tuple(rng.uniform(settings.rotation_min, settings.rotation_max))
-                if settings.random_cut:
-                    sim.cut_depth = float(rng.uniform(settings.cut_min_mm, settings.cut_max_mm))/1000
-                else:
-                    sim.object_z = initial_z
-                if settings.random_xy:
-                    sim.offset = tuple(rng.uniform(settings.xy_min_mm, settings.xy_max_mm)/1000)
-                if settings.random_effect_seed:
-                    sim.effects.seed = int(rng.integers(0, 1_000_001))
-                index = first_index + local_index
-                name = f"sample_{index:06d}"
-                staging = out / (name + ".partial")
-                sim.export(staging, processed_mesh_ref=mesh_name, outputs=settings.outputs)
-                files = {}
-                for item in staging.iterdir():
-                    target = out / f"{name}_{item.name}"
-                    item.rename(target)
-                    files[item.name] = target.name
-                staging.rmdir()
-                record = dict(index=index, sample=name, files=files, directory=str(out),
-                              rotation_xyz_deg=list(sim.rotation), offset_xy_m=list(sim.offset),
-                              cut_depth_m=sim.cut_depth, effect_seed=sim.effects.seed,
-                              object_z_m=sim.object_z, plane_z_m=0.0, max_penetration_m=sim.max_penetration,
-                              contact_fraction=float(np.count_nonzero(sim.raw_depth)/sim.raw_depth.size),
-                              peak_depth_m=float(sim.raw_depth.max()))
-                manifest.write(json.dumps(record) + "\n")
-                manifest.flush()
-                state["completed"] = local_index+1
-                save_state()
-                progress(record)
+        for local_index in range(settings.count):
+            if cancelled():
+                state["status"] = "cancelled"
+                break
+            if settings.random_rotation:
+                sim.rotation = tuple(rng.uniform(settings.rotation_min, settings.rotation_max))
+            if settings.random_cut:
+                sim.cut_depth = float(rng.uniform(settings.cut_min_mm, settings.cut_max_mm))/1000
             else:
-                state["status"] = "complete"
+                sim.object_z = initial_z
+            if settings.random_xy:
+                sim.offset = tuple(rng.uniform(settings.xy_min_mm, settings.xy_max_mm)/1000)
+            if settings.random_effect_seed:
+                sim.effects.seed = int(rng.integers(0, 1_000_001))
+            index = first_index + local_index
+            name = f"sample_{index:06d}"
+            staging = out / (name + ".partial")
+            sim.export(staging, processed_mesh_ref=mesh_name, outputs=settings.outputs)
+            files = {}
+            for item in staging.iterdir():
+                variant = ("clean" if item.name == "tactile_clean.png" else
+                           "default" if item.name == "tactile_default.png" else "tactile")
+                target_dir = variant_directories[variant]
+                target_dir.mkdir(parents=True, exist_ok=True)
+                target = target_dir / f"{name}_{item.name}"
+                item.rename(target)
+                files[item.name] = os.path.relpath(target, out)
+            staging.rmdir()
+            record = dict(index=index, sample=name, files=files, directory=str(out),
+                          rotation_xyz_deg=list(sim.rotation), offset_xy_m=list(sim.offset),
+                          cut_depth_m=sim.cut_depth, effect_seed=sim.effects.seed,
+                          object_z_m=sim.object_z, plane_z_m=0.0, max_penetration_m=sim.max_penetration,
+                          contact_fraction=float(np.count_nonzero(sim.raw_depth)/sim.raw_depth.size),
+                          peak_depth_m=float(sim.raw_depth.max()))
+            state["completed"] = local_index+1
+            progress(record)
+        else:
+            state["status"] = "complete"
     except Exception as exc:
         state["status"] = "failed"
         state["error"] = str(exc)
-    try:
-        save_state()
     finally:
         for reservation in reservations:
             reservation.unlink(missing_ok=True)

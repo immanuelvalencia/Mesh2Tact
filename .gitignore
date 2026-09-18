@@ -13,6 +13,8 @@ output/
 artifacts/
 data/
 train/
+/ml_dataset/
+/ml_dataset.incomplete-*/
 tmp/
 *.npz
 *.mp4
