@@ -1,0 +1,26 @@
+# Mesh2Tact runtime, desktop GUI, preprocessing, validation, and training.
+# CUDA 12.8 PyTorch wheels are available for supported 64-bit Windows and Linux.
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+# GPU training and inference
+torch==2.11.0+cu128
+torchvision==0.26.0+cu128
+
+# Numerical, image, and geometry processing
+numpy==2.4.3
+scipy==1.17.1
+trimesh==5.1.0
+opencv-python==5.0.0.93
+PyYAML==6.0.3
+pillow==12.1.1
+matplotlib==3.10.9
+
+# Desktop interface and 3D visualization
+PyQt5==5.15.11
+QtPy==2.4.3
+vtk==9.7.0
+pyvista==0.49.0
+pyvistaqt==0.13.1
+
+# Training and validation metrics
+scikit-learn==1.8.0

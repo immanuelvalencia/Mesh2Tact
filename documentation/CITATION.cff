@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use Mesh2Tact, please cite this software and the associated paper when it becomes available. The manuscript is currently under peer review."
+title: "Mesh2Tact: Automated Visuotactile Image and Dataset Generation via CAD Mesh Slicing and Optical Rendering"
+type: software
+version: 1.0.0
+date-released: 2026-09-26
+license: MIT
+repository-code: "https://github.com/immanuelvalencia/Mesh2Tact"
+url: "https://github.com/immanuelvalencia/Mesh2Tact"
+authors:
+  - given-names: "Immanuel Jose"
+    family-names: "Valencia"
+  - given-names: "Ryan Rhay"
+    family-names: "Vicerra"
+  - given-names: "Aaron Raymond"
+    family-names: "See"
+  - given-names: "Renann"
+    family-names: "Baldovino"
+  - given-names: "Robert Kerwin"
+    family-names: "Billones"
+  - given-names: "Elmer"
+    family-names: "Dadios"
+  - given-names: "Argel"
+    family-names: "Bandala"
+  - given-names: "Raouf"
+    family-names: "Naguib"

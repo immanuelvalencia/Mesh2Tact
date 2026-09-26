@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose a focused improvement to Mesh2Tact
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Research or workflow need
+      description: What problem would this feature solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the interface, inputs, outputs, and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe current workarounds or related approaches.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Validation plan
+      description: How could the change be tested or scientifically evaluated?

@@ -1,0 +1,10 @@
+# Cross-platform Conda environment for 64-bit Windows and Linux with an
+# NVIDIA driver compatible with the CUDA 12.8 PyTorch wheels.
+name: mesh2tact
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - -r requirements.txt
